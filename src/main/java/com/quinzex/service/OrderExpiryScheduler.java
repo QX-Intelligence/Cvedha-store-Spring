@@ -1,6 +1,7 @@
 package com.quinzex.service;
 
 import com.quinzex.dto.InventoryItemDto;
+import com.quinzex.dto.InventoryReleaseEvent;
 import com.quinzex.dto.InventoryReserveEvent;
 import com.quinzex.entity.Orders;
 import com.quinzex.kafka.InventoryProducer;
@@ -30,10 +31,10 @@ public class OrderExpiryScheduler {
 
            order.setStatus("EXPIRED");
            orderRepo.save(order);
-           InventoryReserveEvent inventoryReserveEvent = new InventoryReserveEvent();
-           inventoryReserveEvent.setOrderId(order.getId());
-           inventoryReserveEvent.setItems(order.getOrderItems().stream().map(i-> new InventoryItemDto(i.getBookId(),i.getQuantity())).toList());
-           inventoryProducer.sendReleaseEvent(inventoryReserveEvent);
+           InventoryReleaseEvent  inventoryReleaseEvent = new InventoryReleaseEvent();
+           inventoryReleaseEvent.setOrderId(order.getId());
+           inventoryReleaseEvent.setItems(order.getOrderItems().stream().map(i-> new InventoryItemDto(i.getBookId(),i.getQuantity())).toList());
+           inventoryProducer.sendReleaseEvent(inventoryReleaseEvent);
        });
 
     }
