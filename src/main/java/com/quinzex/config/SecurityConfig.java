@@ -37,6 +37,7 @@ public class SecurityConfig {
         corsConfiguration.setAllowedOriginPatterns(
                 List.of(
                         "http://localhost:3000",
+                        "https://quinzexintelligence.com",
                         "https://www.quinzexintelligence.com",
                         "https://*.quinzexintelligence.com"
                 )
