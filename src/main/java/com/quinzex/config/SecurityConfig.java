@@ -26,7 +26,7 @@ public class SecurityConfig {
     }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable).cors(cors->{}).sessionManagement(sessionManagement ->sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        http.csrf(AbstractHttpConfigurer::disable).cors(cors->cors.configurationSource(corsConfigurationSource())).sessionManagement(sessionManagement ->sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers("/api/inventory/test/no/permisions","/api/inventory/active/ebooks","/error","/api/books/**").permitAll().anyRequest().authenticated())
                 .addFilterBefore(jwtVerificationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
@@ -34,7 +34,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000","https://www.quinzexintelligence.com"));
+        corsConfiguration.setAllowedOriginPatterns(
+                List.of(
+                        "http://localhost:3000",
+                        "https://www.quinzexintelligence.com",
+                        "https://*.quinzexintelligence.com"
+                )
+        );
         corsConfiguration.setAllowedHeaders(List.of("*"));
         corsConfiguration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         corsConfiguration.setAllowCredentials(true);
