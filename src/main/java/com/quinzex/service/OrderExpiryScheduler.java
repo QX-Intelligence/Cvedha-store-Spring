@@ -28,13 +28,14 @@ public class OrderExpiryScheduler {
            return;
        }
        orders.forEach(order ->{
-
            order.setStatus("EXPIRED");
            orderRepo.save(order);
+
            InventoryReleaseEvent  inventoryReleaseEvent = new InventoryReleaseEvent();
            inventoryReleaseEvent.setOrderId(order.getId());
            inventoryReleaseEvent.setItems(order.getOrderItems().stream().map(i-> new InventoryItemDto(i.getBookId(),i.getQuantity())).toList());
            inventoryProducer.sendReleaseEvent(inventoryReleaseEvent);
+
        });
 
     }

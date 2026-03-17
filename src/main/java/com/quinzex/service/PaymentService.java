@@ -48,10 +48,11 @@ public class PaymentService implements IPaymentService{
     @Override
     public String createRazorPayOrder(Long orderId) throws Exception {
        Orders order = orderRepo.findById(orderId).orElseThrow();
-        if(!"INVENTORY_RESERVED".equals(order.getStatus()) && !"FAILED".equals(order.getStatus())){
+        if(!"INVENTORY_RESERVED".equals(order.getStatus())){
             throw new RuntimeException("Order not ready for payment");
         }
-        if(order.getPaymentExpiryTime().isBefore(LocalDateTime.now())){
+        if(order.getPaymentExpiryTime() == null ||
+                order.getPaymentExpiryTime().isBefore(LocalDateTime.now())){
             throw new RuntimeException("Payment time expired");
         }
 
@@ -151,10 +152,11 @@ public void processWebhook(String payload,String signature){
             if(!payment.has("order_id")){
                 return;
             }
+
             String razorpayOrderId = payment.getString("order_id");
             String razorpayPaymentId = payment.getString("id");
             Orders order = orderRepo.findByRazorpayOrderId(razorpayOrderId).orElseThrow();
-            if ("FAILED".equals(order.getStatus())) {
+            if (!"INVENTORY_RESERVED".equals(order.getStatus())) {
                 return;
             }
 
@@ -162,8 +164,13 @@ public void processWebhook(String payload,String signature){
                 order.setRazorpayPaymentId(razorpayPaymentId);
             }
             order.setStatus("FAILED");
-            orderRepo.save(order);
 
+            orderRepo.save(order);
+            List<OrderItems> items = orderItemRepo.findByOrder_Id(order.getId());
+            InventoryReleaseEvent inventoryReleaseEvent = new InventoryReleaseEvent();
+            inventoryReleaseEvent.setOrderId(order.getId());
+            inventoryReleaseEvent.setItems(items.stream().map(i-> new InventoryItemDto(i.getBookId(),i.getQuantity())).toList());
+            inventoryProducer.sendReleaseEvent(inventoryReleaseEvent);
             break;
         }
         default:
@@ -188,35 +195,36 @@ public boolean verifyWebhookSignature(String payload,String signature){
 @Override
     public Long retryPayment(Long oldOrderId){
         Orders oldOrder = orderRepo.findById(oldOrderId).orElseThrow();
-    if(!"FAILED".equals(oldOrder.getStatus()) && !"INVENTORY_RESERVED".equals(oldOrder.getStatus())){
+    if(!"FAILED".equals(oldOrder.getStatus())){
         throw new RuntimeException("Order cannot be retried");
     }
-    if(oldOrder.getPaymentExpiryTime() == null){
-        throw new RuntimeException("Invalid order state");
+
+    if(oldOrder.getPaymentExpiryTime() == null ||
+            oldOrder.getPaymentExpiryTime().isBefore(LocalDateTime.now())){
+        throw new RuntimeException("Payment time expired");
     }
-        if(oldOrder.getPaymentExpiryTime().isBefore(LocalDateTime.now())){
-            throw new RuntimeException("Payment time expired");
-        }
-    List<OrderItems> oldItems = oldOrder.getOrderItems();
-    InventoryReleaseEvent releaseEvent = new InventoryReleaseEvent();
-        releaseEvent.setOrderId(oldOrderId);
-       releaseEvent.setItems(oldItems.stream().map(i-> new InventoryItemDto(i.getBookId(),i.getQuantity())).toList());
-       inventoryProducer.sendReleaseEvent(releaseEvent);
+
+
+    oldOrder.setStatus("REPLACED");
+    orderRepo.save(oldOrder);
+
+
         Orders newOrder = new Orders();
         newOrder.setUserEmail(oldOrder.getUserEmail());
-        newOrder.setStatus("CREATED");
+        newOrder.setStatus("PENDING");
         newOrder.setSubTotal(oldOrder.getSubTotal());
         newOrder.setTotalAmount(oldOrder.getTotalAmount());
-        newOrder.setCreatedAt(LocalDateTime.now());
         newOrder.setPaymentExpiryTime(LocalDateTime.now().plusMinutes(15));
-        oldOrder.setStatus("REPLACED");
-        orderRepo.save(oldOrder);
-        orderRepo.save(newOrder);
+        newOrder.setCreatedAt(LocalDateTime.now());
 
-        List<OrderItems> newItems = oldOrder.getOrderItems().stream()
+
+    Orders savedNewOrder =  orderRepo.save(newOrder);
+
+    List<OrderItems> oldItems = orderItemRepo.findByOrder_Id(oldOrder.getId());
+        List<OrderItems> newItems = oldItems.stream()
                 .map(item->{
                     OrderItems items = new OrderItems();
-                    items.setOrder(newOrder);
+                    items.setOrder(savedNewOrder);
                     items.setBookId(item.getBookId());
                     items.setQuantity(item.getQuantity());
                     items.setPrice(item.getPrice());
@@ -224,9 +232,9 @@ public boolean verifyWebhookSignature(String payload,String signature){
                 }).toList();
         orderItemRepo.saveAll(newItems);
         InventoryReserveEvent inventoryReserveEvent = new InventoryReserveEvent();
-        inventoryReserveEvent.setOrderId(newOrder.getId());
+        inventoryReserveEvent.setOrderId(savedNewOrder.getId());
         inventoryReserveEvent.setItems(newItems.stream().map(item -> new InventoryItemDto(item.getBookId(), item.getQuantity())).toList());
         inventoryProducer.sendReserveEvent(inventoryReserveEvent);
-        return newOrder.getId();
+        return savedNewOrder.getId();
 }
 }
