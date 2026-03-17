@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,12 +25,10 @@ public class OrderHistoryService {
     private final EbookRepo ebookRepo;
     private final S3Service s3Service;
 
-    public List<OrderHistoryResponse> getUserOrders(String status, Long cursor) {
+    public List<OrderHistoryResponse> getUserOrders( Long cursor) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (status == null) {
-            status = "PAID";
-        }
-        List<Orders> orders = orderRepo.findUserOrdersWithCursor(email, status, cursor);
+
+        List<Orders> orders = orderRepo.findUserOrdersWithCursor(email,  cursor);
         return orders.stream().map(order -> OrderHistoryResponse.builder().orderId(order.getId())
                         .status(order.getStatus()).totalAmount(order.getTotalAmount()).createdAt(order.getCreatedAt()).build())
                 .toList();
@@ -47,6 +46,9 @@ public class OrderHistoryService {
         return items.stream().map(item -> {
 
             Ebooks ebook = ebbokMap.get(item.getBookId());
+            if (ebook == null) {
+                return null;
+            }
             String coverUrl = null;
             if (ebook.getCoverPhoto() != null) {
                 coverUrl = s3Service.generatePresignedUrl(ebook.getCoverPhoto());
@@ -68,7 +70,7 @@ public class OrderHistoryService {
                     .ebookPdfUrl(ebookUrl)
                     .build();
 
-        }).toList();
+        }).filter(Objects::nonNull).toList();
     }
 
 }

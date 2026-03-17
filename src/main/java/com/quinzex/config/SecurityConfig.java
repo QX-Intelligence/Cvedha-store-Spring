@@ -27,7 +27,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable).cors(cors->cors.configurationSource(corsConfigurationSource())).sessionManagement(sessionManagement ->sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers("/api/inventory/test/no/permisions","/api/inventory/active/ebooks","/error","/api/books/**").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers("/api/inventory/test/no/permisions","/api/inventory/active/ebooks","/error","/api/books/**","/api/payment/webhook").permitAll().anyRequest().authenticated())
                 .addFilterBefore(jwtVerificationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

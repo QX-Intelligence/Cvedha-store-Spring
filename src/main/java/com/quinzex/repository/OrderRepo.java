@@ -23,14 +23,13 @@ public interface OrderRepo extends JpaRepository<Orders, Long> {
     @Query(value = """
 SELECT * FROM orders
 WHERE user_email = :email
-AND (:status IS NULL OR status = :status)
+AND status IN ('PAID','FAILED')
 AND (:cursor IS NULL OR id < :cursor)
 ORDER BY id DESC
 LIMIT 10
 """, nativeQuery = true)
     List<Orders> findUserOrdersWithCursor(
             @Param("email") String email,
-            @Param("status") String status,
             @Param("cursor") Long cursor
     );
 

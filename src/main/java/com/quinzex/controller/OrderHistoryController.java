@@ -18,10 +18,9 @@ public class OrderHistoryController {
     // Get user order history with cursor pagination
     @GetMapping("my/orders")
     public List<OrderHistoryResponse> getUserOrders(
-            @RequestParam(required = false) String status,
             @RequestParam(required = false) Long cursor
     ) {
-        return orderHistoryService.getUserOrders(status, cursor);
+        return orderHistoryService.getUserOrders( cursor);
     }
 
     // Get items of a specific order
