@@ -13,5 +13,6 @@ public class OrderHistoryResponse {
     private String status;
     private Double totalAmount;
     private LocalDateTime createdAt;
+    private  LocalDateTime expiryTime;
 
 }

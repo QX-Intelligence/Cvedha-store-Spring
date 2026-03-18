@@ -30,7 +30,7 @@ public class OrderHistoryService {
 
         List<Orders> orders = orderRepo.findUserOrdersWithCursor(email,  cursor);
         return orders.stream().map(order -> OrderHistoryResponse.builder().orderId(order.getId())
-                        .status(order.getStatus()).totalAmount(order.getTotalAmount()).createdAt(order.getCreatedAt()).build())
+                        .status(order.getStatus()).totalAmount(order.getTotalAmount()).createdAt(order.getCreatedAt()).expiryTime(order.getPaymentExpiryTime()).build())
                 .toList();
     }
 
