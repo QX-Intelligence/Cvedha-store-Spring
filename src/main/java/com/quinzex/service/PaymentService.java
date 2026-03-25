@@ -21,6 +21,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -52,7 +53,7 @@ public class PaymentService implements IPaymentService{
             throw new RuntimeException("Order not ready for payment");
         }
         if(order.getPaymentExpiryTime() == null ||
-                order.getPaymentExpiryTime().isBefore(LocalDateTime.now())){
+                order.getPaymentExpiryTime().isBefore(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))){
             throw new RuntimeException("Payment time expired");
         }
 
@@ -200,7 +201,7 @@ public boolean verifyWebhookSignature(String payload,String signature){
     }
 
     if(oldOrder.getPaymentExpiryTime() == null ||
-            oldOrder.getPaymentExpiryTime().isBefore(LocalDateTime.now())){
+            oldOrder.getPaymentExpiryTime().isBefore(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))){
         throw new RuntimeException("Payment time expired");
     }
 
@@ -214,8 +215,8 @@ public boolean verifyWebhookSignature(String payload,String signature){
         newOrder.setStatus("PENDING");
         newOrder.setSubTotal(oldOrder.getSubTotal());
         newOrder.setTotalAmount(oldOrder.getTotalAmount());
-        newOrder.setPaymentExpiryTime(LocalDateTime.now().plusMinutes(15));
-        newOrder.setCreatedAt(LocalDateTime.now());
+        newOrder.setPaymentExpiryTime(LocalDateTime.now(ZoneId.of("Asia/Kolkata")).plusMinutes(15));
+        newOrder.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
 
 
     Orders savedNewOrder =  orderRepo.save(newOrder);

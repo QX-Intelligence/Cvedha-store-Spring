@@ -14,6 +14,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -51,7 +52,7 @@ public class InventoryConsumer {
          return;
      }
      order.setStatus("INVENTORY_RESERVED");
-     order.setPaymentExpiryTime(LocalDateTime.now().plusMinutes(15));
+     order.setPaymentExpiryTime(LocalDateTime.now(ZoneId.of("Asia/Kolkata")).plusMinutes(15));
      orderRepo.save(order);
  }
     @KafkaListener(topics = "inventoryFailedTopic", groupId = "order-group")
@@ -61,7 +62,7 @@ public void handleFailed(InventoryReserveEvent inventoryReserveEvent){
             return;
         }
         order.setStatus("FAILED");
-        order.setPaymentExpiryTime(LocalDateTime.now().plusMinutes(15));
+        order.setPaymentExpiryTime(LocalDateTime.now(ZoneId.of("Asia/Kolkata")).plusMinutes(15));
         orderRepo.save(order);
 }
     private List<OrderItems> convert(List<InventoryItemDto> inventoryItemDto){

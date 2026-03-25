@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -23,7 +24,7 @@ public class OrderExpiryScheduler {
     @Scheduled(fixedRate = 60000) // every 60 seconds
     @Transactional
     public void expireOrdersAndReleaseInventory() {
-       List<Orders> orders = orderRepo.findByStatusAndPaymentExpiryTimeBefore(  "INVENTORY_RESERVED", LocalDateTime.now());
+       List<Orders> orders = orderRepo.findByStatusAndPaymentExpiryTimeBefore(  "INVENTORY_RESERVED", LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
        if (orders.isEmpty()) {
            return;
        }

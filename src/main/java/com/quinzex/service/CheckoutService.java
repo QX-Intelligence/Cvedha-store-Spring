@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -42,7 +43,7 @@ public class CheckoutService implements IcheckoutService {
           Orders   order = new Orders();
           order.setUserEmail(userEmail);
           order.setStatus("PENDING");
-          order.setCreatedAt(LocalDateTime.now());
+          order.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
         double subTotal = cartItems.stream().mapToDouble(item-> item.getEbook().getBookPrice()* item.getQuantity()).sum();
         double gstPercentage = gstRepo.findTopByOrderByIdDesc()
                 .map(g -> (double) g.getGstPercentage())

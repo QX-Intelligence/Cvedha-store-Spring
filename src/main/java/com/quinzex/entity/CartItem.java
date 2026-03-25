@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Data
 @Table(name = "cart_items")
@@ -24,5 +25,5 @@ public class CartItem {
 
     private Boolean active = true;
 
-    private LocalDateTime addedAt = LocalDateTime.now();
+    private LocalDateTime addedAt = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
 }
