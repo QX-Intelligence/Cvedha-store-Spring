@@ -49,6 +49,19 @@ spring:
             value:
               default:
                 type: com.quinzex.dto.InventoryReserveEvent
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: smtpout.secureserver.net
 
 server:
   port: 8081
@@ -70,12 +83,8 @@ logging:
   level:
     org.springframework.security: DEBUG
 
-razorpay.key: ${RAZORPAY_KEY_ID}
-razorpay.secret: ${RAZORPAY_KEY_SECRET}
-razorpay.webhook.secret: ${RAZORPAY_WEBHOOK_SECRET}
-spring.mail.host: ${MAIL_HOST}
-spring.mail.port: ${MAIL_PORT}
-spring.mail.username: ${MAIL_USERNAME}
-spring.mail.password: ${MAIL_PASSWORD}
-spring.mail.properties.mail.smtp.auth: true
-spring.mail.properties.mail.smtp.starttls.enable: true
+razorpay:
+  key: ${RAZORPAY_KEY_ID}
+  secret: ${RAZORPAY_KEY_SECRET}
+  webhook:
+    secret: ${RAZORPAY_WEBHOOK_SECRET}
